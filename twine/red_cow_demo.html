@@ -9,15 +9,119 @@
 </head>
 <body>
 <tw-story><noscript><tw-noscript>JavaScript needs to be enabled to play The Red Cow: Coming Storm.</tw-noscript></noscript></tw-story>
-<!-- UUID://A1B2C3D4-E5F6-7890-ABCD-EF1234567890// --><tw-storydata name="The Red Cow: Coming Storm" startnode="6" creator="Twee-ts" creator-version="1.2.0" ifid="A1B2C3D4-E5F6-7890-ABCD-EF1234567890" zoom="1" format="Harlowe" format-version="3.3.0" options="" tags="" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css"></style><script role="script" id="twine-user-script" type="text/twine-javascript"></script><tw-passagedata pid="1" name="StorySettings" tags="" position="100,100" size="100,100">{
-  &quot;type&quot;: &quot;twine&quot;,
-  &quot;sidebar&quot;: true,
-  &quot;skip-title-screen&quot;: false,
-  &quot;tw-colour&quot;: &quot;#dddddd&quot;,
-  &quot;mutations&quot;: true,
-  &quot;autosave&quot;: true,
-  &quot;check-naughtytimes&quot;: true
-}</tw-passagedata><tw-passagedata pid="2" name="Stylesheet" tags="" position="225,100" size="100,100">&lt;style&gt;
+<!-- UUID://6EEC6162-9C7E-47CF-971B-B90B09DE4264// --><tw-storydata name="The Red Cow: Coming Storm" startnode="5" creator="Twee-ts" creator-version="1.2.0" ifid="6EEC6162-9C7E-47CF-971B-B90B09DE4264" zoom="1" format="Harlowe" format-version="3.3.0" options="" tags="" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css"></style><script role="script" id="twine-user-script" type="text/twine-javascript">/* Custom JavaScript functions for the Red Cow game */
+
+window.roll = function() {
+    var charDie = Math.floor(Math.random() * 20) + 1;
+    var resistDie = Math.floor(Math.random() * 20) + 1;
+    var result = "mixed";
+
+    if (charDie === 20) {
+        result = "critical";
+    } else if (charDie === 1) {
+        result = "fumble";
+    } else if (charDie >= 11) {
+        if (resistDie >= 11) {
+            result = "mixed";
+        } else {
+            result = "victory";
+        }
+    } else {
+        if (resistDie >= 11) {
+            result = "defeat";
+        } else {
+            result = "mixed";
+        }
+    }
+
+    return {
+        charDie: charDie,
+        resistDie: resistDie,
+        result: result
+    };
+};
+
+window.simpleRoll = function() {
+    var roll = Math.floor(Math.random() * 20) + 1;
+    var result = "fail";
+
+    if (roll >= 11) {
+        result = "success";
+    }
+    if (roll >= 17) {
+        result = "great";
+    }
+
+    return {
+        roll: roll,
+        result: result
+    };
+};
+
+window.factionRoll = function() {
+    var bonus = 0;
+    var player = State.variables.player || {};
+    var factionStanding = State.variables.factionStanding || {};
+
+    if (player.cult === "Orlanth Adventurous" && factionStanding.freeSartar >= 15) {
+        bonus = 2;
+    } else if (player.cult === "Ernalda" && factionStanding.eyeOfHurricane >= 15) {
+        bonus = 2;
+    } else if ((player.cult === "Storm Bull" || player.cult === "Orlanth Rex") && factionStanding.wolfskinners >= 15) {
+        bonus = 2;
+    } else if (player.cult === "Humakt" && factionStanding.eyeOfHurricane >= 15) {
+        bonus = 2;
+    }
+
+    var roll = Math.floor(Math.random() * 20) + 1 + bonus;
+    var result = "fail";
+
+    if (roll >= 11) {
+        result = "success";
+    }
+    if (roll >= 17) {
+        result = "great";
+    }
+
+    return {
+        roll: roll,
+        bonus: bonus,
+        result: result
+    };
+};
+
+window.updateFaction = function() {
+    var current = State.variables.factionStanding.conqueringStorm;
+    current = current + 2;
+    if (current > 20) current = 20;
+    State.variables.factionStanding.conqueringStorm = current;
+};
+
+window.updateResources = function() {
+    var current = State.variables.clanResources.wealth;
+    current = current - 1;
+    if (current < 0) current = 0;
+    State.variables.clanResources.wealth = current;
+
+    current = State.variables.clanResources.warriors;
+    current = current - 1;
+    if (current < 0) current = 0;
+    State.variables.clanResources.warriors = current;
+};
+
+window.checkEnding = function() {
+    State.variables.endingType = "none";
+    var factionStanding = State.variables.factionStanding;
+    var clanResources = State.variables.clanResources;
+
+    if (factionStanding.freeSartar >= 20 && factionStanding.wolfskinners >= 15) {
+        State.variables.endingType = "freedom";
+    } else if (factionStanding.moonWinds >= 20) {
+        State.variables.endingType = "collaboration";
+    } else if (clanResources.wealth <= 5) {
+        State.variables.endingType = "exile";
+    }
+};</script><tw-passagedata pid="1" name="StorySettings" tags="" position="100,100" size="100,100">{&quot;type&quot;: &quot;twine&quot;, &quot;sidebar&quot;: true, &quot;skip-title-screen&quot;: false, &quot;tw-colour&quot;: &quot;#dddddd&quot;, &quot;mutations&quot;: true, &quot;autosave&quot;: true, &quot;check-naughtytimes&quot;: true}</tw-passagedata><tw-passagedata pid="2" name="Stylesheet" tags="" position="225,100" size="100,100">&lt;style&gt;
 tw-passage {
   font-family: &quot;Georgia&quot;, serif;
   font-size: 1.1em;
@@ -77,110 +181,11 @@ $arcProgress = (dm:)[
   &quot;kara&quot;: 0
 ]
 $endingType = null
-$gameLog = (array:)
-&lt;/div&gt;</tw-passagedata><tw-passagedata pid="5" name="QuestFunctions" tags="nosave" position="600,100" size="100,100">&lt;&lt;macro &quot;roll&quot;&gt;&gt;
-&lt;&lt;set _charDie = (random: 1, 20)&gt;&gt;
-&lt;&lt;set _resistDie = (random: 1, 20)&gt;&gt;
-&lt;&lt;set _result = &quot;mixed&quot;&gt;&gt;
-&lt;&lt;if _charDie == 20&gt;&gt;
-&lt;&lt;set _result = &quot;critical&quot;&gt;&gt;
-&lt;&lt;elseif _charDie == 1&gt;&gt;
-&lt;&lt;set _result = &quot;fumble&quot;&gt;&gt;
-&lt;&lt;elseif _charDie &gt;= 11&gt;&gt;
-&lt;&lt;if _resistDie &gt;= 11&gt;&gt;
-&lt;&lt;set _result = &quot;mixed&quot;&gt;&gt;
-&lt;&lt;else&gt;&gt;
-&lt;&lt;set _result = &quot;victory&quot;&gt;&gt;
-&lt;&lt;/if&gt;&gt;
-&lt;&lt;else&gt;&gt;
-&lt;&lt;if _resistDie &gt;= 11&gt;&gt;
-&lt;&lt;set _result = &quot;defeat&quot;&gt;&gt;
-&lt;&lt;else&gt;&gt;
-&lt;&lt;set _result = &quot;mixed&quot;&gt;&gt;
-&lt;&lt;/if&gt;&gt;
-&lt;&lt;/if&gt;&gt;
-&lt;&lt;/if&gt;&gt;
-&lt;&lt;return (dm:)[
-  &quot;charDie&quot;: _charDie,
-  &quot;resistDie&quot;: _resistDie,
-  &quot;result&quot;: _result
-]&gt;&gt;
-&lt;/macro&gt;&gt;
-
-&lt;&lt;macro &quot;simpleRoll&quot;&gt;&gt;
-&lt;&lt;set _roll = (random: 1, 20)&gt;&gt;
-&lt;&lt;set _result = &quot;fail&quot;&gt;&gt;
-&lt;&lt;if _roll &gt;= 11&gt;&gt;
-&lt;&lt;set _result = &quot;success&quot;&gt;&gt;
-&lt;&lt;/if&gt;&gt;
-&lt;&lt;if _roll &gt;= 17&gt;&gt;
-&lt;&lt;set _result = &quot;great&quot;&gt;&gt;
-&lt;&lt;/if&gt;&gt;
-&lt;&lt;return (dm:)[
-  &quot;roll&quot;: _roll,
-  &quot;result&quot;: _result
-]&gt;&gt;
-&lt;/macro&gt;&gt;
-
-&lt;&lt;macro &quot;factionRoll&quot;&gt;&gt;
-&lt;&lt;set _bonus = 0&gt;&gt;
-&lt;&lt;if $player.cult == &quot;Orlanth Adventurous&quot; and $factionStanding.freeSartar &gt;= 15&gt;&gt;
-&lt;&lt;set _bonus = 2&gt;&gt;
-&lt;&lt;elseif $player.cult == &quot;Ernalda&quot; and $factionStanding.eyeOfHurricane &gt;= 15&gt;&gt;
-&lt;&lt;set _bonus = 2&gt;&gt;
-&lt;&lt;elseif ($player.cult == &quot;Storm Bull&quot; or $player.cult == &quot;Orlanth Rex&quot;) and $factionStanding.wolfskinners &gt;= 15&gt;&gt;
-&lt;&lt;set _bonus = 2&gt;&gt;
-&lt;&lt;elseif $player.cult == &quot;Humakt&quot; and $factionStanding.eyeOfHurricane &gt;= 15&gt;&gt;
-&lt;&lt;set _bonus = 2&gt;&gt;
-&lt;&lt;/if&gt;&gt;
-&lt;&lt;set _roll = (random: 1, 20) + _bonus&gt;&gt;
-&lt;&lt;set _result = &quot;fail&quot;&gt;&gt;
-&lt;&lt;if _roll &gt;= 11&gt;&gt;
-&lt;&lt;set _result = &quot;success&quot;&gt;&gt;
-&lt;&lt;/if&gt;&gt;
-&lt;&lt;if _roll &gt;= 17&gt;&gt;
-&lt;&lt;set _result = &quot;great&quot;&gt;&gt;
-&lt;&lt;/if&gt;&gt;
-&lt;&lt;return (dm:)[
-  &quot;roll&quot;: _roll,
-  &quot;bonus&quot;: _bonus,
-  &quot;result&quot;: _result,
-  &quot;TN&quot;: _tn
-]&gt;&gt;
-&lt;/macro&gt;&gt;
-
-&lt;&lt;macro &quot;updateFaction&quot;&gt;&gt;
-&lt;&lt;set _current = $factionStanding.conqueringStorm&gt;&gt;
-&lt;&lt;set _current = _current + 2&gt;&gt;
-&lt;&lt;if _current &gt; 20&gt;&gt;&lt;&lt;set _current = 20&gt;&gt;&lt;&lt;/if&gt;&gt;
-&lt;&lt;set $factionStanding.conqueringStorm = _current&gt;&gt;
-&lt;/macro&gt;&gt;
-
-&lt;&lt;macro &quot;updateResources&quot;&gt;&gt;
-&lt;&lt;set _current = $clanResources.wealth&gt;&gt;
-&lt;&lt;set _current = _current - 1&gt;&gt;
-&lt;&lt;if _current &lt; 0&gt;&gt;&lt;&lt;set _current = 0&gt;&gt;&lt;&lt;/if&gt;&gt;
-&lt;&lt;set $clanResources.wealth = _current&gt;&gt;
-&lt;&lt;set _current = $clanResources.warriors&gt;&gt;
-&lt;&lt;set _current = _current - 1&gt;&gt;
-&lt;&lt;if _current &lt; 0&gt;&gt;&lt;&lt;set _current = 0&gt;&gt;&lt;&lt;/if&gt;&gt;
-&lt;&lt;set $clanResources.warriors = _current&gt;&gt;
-&lt;/macro&gt;&gt;
-
-&lt;&lt;macro &quot;checkEnding&quot;&gt;&gt;
-&lt;&lt;set $endingType = &quot;none&quot;&gt;&gt;
-&lt;&lt;if $factionStanding.freeSartar &gt;= 20 and $factionStanding.wolfskinners &gt;= 15&gt;&gt;
-&lt;&lt;set $endingType = &quot;freedom&quot;&gt;&gt;
-&lt;&lt;elseif $factionStanding.moonWinds &gt;= 20&gt;&gt;
-&lt;&lt;set $endingType = &quot;collaboration&quot;&gt;&gt;
-&lt;&lt;elseif $clanResources.wealth &lt;= 5&gt;&gt;
-&lt;&lt;set $endingType = &quot;exile&quot;&gt;&gt;
-&lt;&lt;/if&gt;&gt;
-&lt;/macro&gt;&gt;</tw-passagedata><tw-passagedata pid="6" name="Start" tags="" position="725,100" size="100,100">The wind sweeps down from the Quivin Mountains, carrying the scent of snow. You stand at the gates of Red Cow Fort, watching the gray sky—knowing that the coming years will test everything your clan holds dear.
+$gameLog = (array:)</tw-passagedata><tw-passagedata pid="5" name="Start" tags="" position="600,100" size="100,100">The wind sweeps down from the Quivin Mountains, carrying the scent of snow. You stand at the gates of Red Cow Fort, watching the gray sky—knowing that the coming years will test everything your clan holds dear.
 
 But first, you must choose your hero.
 
-[[Select Your Hero]]</tw-passagedata><tw-passagedata pid="7" name="Select Your Hero" tags="" position="850,100" size="100,100">Where do your loyalties lie? Choose your character:
+[[Select Your Hero]]</tw-passagedata><tw-passagedata pid="6" name="Select Your Hero" tags="" position="725,100" size="100,100">Where do your loyalties lie? Choose your character:
 
 &lt;&lt;if $player is null&gt;&gt;
 
@@ -190,7 +195,7 @@ But first, you must choose your hero.
 * [[Asvith Silver-Step-&gt;Character Select: Asvith]]
 * [[Kara Silent-Blade-&gt;Character Select: Kara]]
 
-&lt;&lt;/if&gt;&gt;</tw-passagedata><tw-passagedata pid="8" name="Character Select: Thorvald" tags="" position="975,100" size="100,100">&lt;&lt;unset $player&gt;&gt;
+&lt;/if&gt;</tw-passagedata><tw-passagedata pid="7" name="Character Select: Thorvald" tags="" position="850,100" size="100,100">&lt;&lt;unset $player&gt;&gt;
 &lt;&lt;set $player = (dm:)[
   &quot;name&quot;: &quot;Thorvald Storm-Speaker&quot;,
   &quot;bloodline&quot;: &quot;Tormakting&quot;,
@@ -229,7 +234,7 @@ But first, you must choose your hero.
 ]&gt;&gt;
 You are Thorvald Storm-Speaker, a housecarl sworn to defend the chieftain. Your brother died when the Lunars came—you watched him fall, and you swore an oath: no more foreign swords on Red Cow land.
 
-[[Begin the Campaign]]</tw-passagedata><tw-passagedata pid="9" name="Character Select: Erlana" tags="" position="1100,100" size="100,100">&lt;&lt;unset $player&gt;&gt;
+[[Begin the Campaign]]</tw-passagedata><tw-passagedata pid="8" name="Character Select: Erlana" tags="" position="975,100" size="100,100">&lt;&lt;unset $player&gt;&gt;
 &lt;&lt;set $player = (dm:)[
   &quot;name&quot;: &quot;Erlana Earth-Keeper&quot;,
   &quot;bloodline&quot;: &quot;Kerenelling&quot;,
@@ -267,7 +272,7 @@ You are Thorvald Storm-Speaker, a housecarl sworn to defend the chieftain. Your 
 ]&gt;&gt;
 You are Erlana Earth-Keeper, tender of the sacred herds. Your father brought the Lunar missionaries into the clan—and died prosperous while others suffered. You carry his shame like a stone around your neck, and prove your worth with every healing.
 
-[[Begin the Campaign]]</tw-passagedata><tw-passagedata pid="10" name="Character Select: Rok" tags="" position="1225,100" size="100,100">&lt;&lt;unset $player&gt;&gt;
+[[Begin the Campaign]]</tw-passagedata><tw-passagedata pid="9" name="Character Select: Rok" tags="" position="1100,100" size="100,100">&lt;&lt;unset $player&gt;&gt;
 &lt;&lt;set $player = (dm:)[
   &quot;name&quot;: &quot;Rok Thunder-Mouth&quot;,
   &quot;bloodline&quot;: &quot;Bolthoring&quot;,
@@ -305,7 +310,7 @@ You are Erlana Earth-Keeper, tender of the sacred herds. Your father brought the
 ]&gt;&gt;
 You are Rok Thunder-Mouth, voice of the storm. The Telmori came on a moonless night—what remained of your stead was embers and blood in the snow. You alone survived. Now you hunt them with a fury that even your brothers in the Storm Bull cult fear.
 
-[[Begin the Campaign]]</tw-passagedata><tw-passagedata pid="11" name="Character Select: Asvith" tags="" position="100,225" size="100,100">&lt;&lt;unset $player&gt;&gt;
+[[Begin the Campaign]]</tw-passagedata><tw-passagedata pid="10" name="Character Select: Asvith" tags="" position="1225,100" size="100,100">&lt;&lt;unset $player&gt;&gt;
 &lt;&lt;set $player = (dm:)[
   &quot;name&quot;: &quot;Asvith Silver-Step&quot;,
   &quot;bloodline&quot;: &quot;Sarostiping&quot;,
@@ -344,7 +349,7 @@ You are Rok Thunder-Mouth, voice of the storm. The Telmori came on a moonless ni
 ]&gt;&gt;
 You are Asvith Silver-Step, rider of the border. You serve Jomes, the Lunars&#39; puppet—but you feed information to the rebels. Somewhere in this clan sits the man who sold your father to the wolves. You wait. You watch. You ride.
 
-[[Begin the Campaign]]</tw-passagedata><tw-passagedata pid="12" name="Character Select: Kara" tags="" position="225,225" size="100,100">&lt;&lt;unset $player&gt;&gt;
+[[Begin the Campaign]]</tw-passagedata><tw-passagedata pid="11" name="Character Select: Kara" tags="" position="100,225" size="100,100">&lt;&lt;unset $player&gt;&gt;
 &lt;&lt;set $player = (dm:)[
   &quot;name&quot;: &quot;Kara Silent-Blade&quot;,
   &quot;bloodline&quot;: &quot;Osmanning&quot;,
@@ -383,13 +388,13 @@ You are Asvith Silver-Step, rider of the border. You serve Jomes, the Lunars&#39
 ]&gt;&gt;
 You are Kara Silent-Blade, truth-seeker. Your husband died on your wedding night—killed with a blade, not a beast. The clan says accident. Humakt&#39;s priests say murder. You will find the killer. And when you do, you will speak the truth before you cut.
 
-[[Begin the Campaign]]</tw-passagedata><tw-passagedata pid="13" name="Begin the Campaign" tags="" position="350,225" size="100,100">You are $player.name.
+[[Begin the Campaign]]</tw-passagedata><tw-passagedata pid="12" name="Begin the Campaign" tags="" position="225,225" size="100,100">You are $player.name.
 
 $player.description
 
 The year is $year. The season is $season. The Hero Wars are coming—and the Red Cow clan must survive.
 
-[[Continue-&gt;1618 Opening]]</tw-passagedata><tw-passagedata pid="14" name="1618 Opening" tags="" position="475,225" size="100,100">The wind carries whispers from the east. The Telmori have been quiet for a season—but the elders remember when they wiped out the Maboder tribe. The Lunar Empire rules through their puppet prince, and the rebellion stirs in the hills.
+[[Continue-&gt;1618 Opening]]</tw-passagedata><tw-passagedata pid="13" name="1618 Opening" tags="" position="350,225" size="100,100">The wind carries whispers from the east. The Telmori have been quiet for a season—but the elders remember when they wiped out the Maboder tribe. The Lunar Empire rules through their puppet prince, and the rebellion stirs in the hills.
 
 You stand at the gates of Red Cow Fort, looking out at the lands your ancestors fought for.
 
@@ -397,53 +402,47 @@ What do you do?
 
 * [[Join the moot (political)-&gt;Moot 1618]]
 * [[Patrol the borders (action)-&gt;Border Patrol]]
-* [[Visit the temple (story)-&gt;Temple Visit]]</tw-passagedata><tw-passagedata pid="15" name="Moot 1618" tags="" position="600,225" size="100,100">&lt;&lt;set _bonus = 0&gt;&gt;
-&lt;&lt;if $player.cult == &quot;Orlanth Adventurous&quot; and $factionStanding.freeSartar &gt;= 15&gt;&gt;&lt;&lt;set _bonus = 2&gt;&gt;&lt;&lt;/if&gt;&gt;
-&lt;&lt;set _roll = (random: 1, 20) + _bonus&gt;&gt;
+* [[Visit the temple (story)-&gt;Temple Visit]]</tw-passagedata><tw-passagedata pid="14" name="Moot 1618" tags="" position="475,225" size="100,100">(set: _roll to (js-eval: &quot;factionRoll()&quot;))
 The moot gathers at the fort—the chieftain&#39;s council, debating the response to Lunar tribute demands. Broddi Strong-Kin speaks for peace. Darna Longcoat shouts for war.
 
-&lt;&lt;if _roll.result is &quot;great&quot;&gt;&gt;
+(if: _roll.result is &quot;great&quot;)[
 You sway the moot with your words. ((Your contribution helps the Conquering Storm faction gain influence.))
-&lt;&lt;set $factionStanding.conqueringStorm = $factionStanding.conqueringStorm + 2&gt;&gt;
-&lt;&lt;elseif _roll.result is &quot;success&quot;&gt;&gt;
+(set: $factionStanding.conqueringStorm to $factionStanding.conqueringStorm + 2)
+](elseif: _roll.result is &quot;success&quot;)[
 You speak well, and the moot considers your words.
-&lt;&lt;set $factionStanding.conqueringStorm = $factionStanding.conqueringStorm + 1&gt;&gt;
-&lt;&lt;else&gt;&gt;
+(set: $factionStanding.conqueringStorm to $factionStanding.conqueringStorm + 1)
+](else:)[
 Your words fall flat—the council is divided, and nothing is resolved.
-&lt;&lt;/if&gt;&gt;
+]
 
-[[Continue-&gt;1618-2]]</tw-passagedata><tw-passagedata pid="16" name="Border Patrol" tags="" position="725,225" size="100,100">&lt;&lt;set _bonus = 0&gt;&gt;
-&lt;&lt;if ($player.cult == &quot;Storm Bull&quot; or $player.cult == &quot;Orlanth Rex&quot;) and $factionStanding.wolfskinners &gt;= 15&gt;&gt;&lt;&lt;set _bonus = 2&gt;&gt;&lt;&lt;/if&gt;&gt;
-&lt;&lt;set _roll = (random: 1, 20) + _bonus&gt;&gt;
+[[Continue-&gt;1618-2]]</tw-passagedata><tw-passagedata pid="15" name="Border Patrol" tags="" position="600,225" size="100,100">(set: _roll to (js-eval: &quot;factionRoll()&quot;))
 You ride the borders of the clan lands, watching for Telmori signs.
 
-&lt;&lt;if _roll.result is &quot;great&quot;&gt;&gt;
+(if: _roll.result is &quot;great&quot;)[
 You spot signs of a Telmori scouting party—three wolves, moving east. You report to the thanes.
-&lt;&lt;call &quot;updateFaction&quot;, &quot;wolfskinners&quot;, 2&gt;&gt;
-&lt;&lt;call &quot;advanceArc&quot;, &quot;rok&quot;, 1&gt;&gt;
-&lt;&lt;elseif _roll.result is &quot;success&quot;&gt;&gt;
+(set: $factionStanding.wolfskinners to $factionStanding.wolfskinners + 2)
+(set: $arcProgress.rok to $arcProgress.rok + 1)
+](elseif: _roll.result is &quot;success&quot;)[
 You see nothing unusual—but the ride is peaceful.
-&lt;&lt;call &quot;updateFaction&quot;, &quot;wolfskinners&quot;, 1&gt;&gt;
-&lt;&lt;else&gt;&gt;
+(set: $factionStanding.wolfskinners to $factionStanding.wolfskinners + 1)
+](else:)[
 You nearly ride into a Telmori patrol—they let you go, for now. A warning.
-&lt;&lt;/if&gt;&gt;
+]
 
-[[Continue-&gt;1618-2]]</tw-passagedata><tw-passagedata pid="17" name="Temple Visit" tags="" position="850,225" size="100,100">&lt;&lt;set _bonus = 0&gt;&gt;
-&lt;&lt;if $player.cult == &quot;Ernalda&quot; and $factionStanding.eyeOfHurricane &gt;= 15&gt;&gt;&lt;&lt;set _bonus = 2&gt;&gt;&lt;&lt;/if&gt;&gt;
-&lt;&lt;set _roll = (random: 1, 20) + _bonus&gt;&gt;
+[[Continue-&gt;1618-2]]</tw-passagedata><tw-passagedata pid="16" name="Temple Visit" tags="" position="725,225" size="100,100">(set: _roll to (js-eval: &quot;factionRoll()&quot;))
 You visit the temple of your cult—Ernalda&#39;s shrine for healing, Orlanth&#39;s hall for war.
 
-&lt;&lt;if _roll.result is &quot;great&quot;&gt;&gt;
+(if: _roll.result is &quot;great&quot;)[
 The priest blesses you. You feel the favor of the gods.
-&lt;&lt;set $factionStanding.eyeOfHurricane = $factionStanding.eyeOfHurricane + 2&gt;&gt;
-&lt;&lt;elseif _roll.result is &quot;success&quot;&gt;&gt;
+(set: $factionStanding.eyeOfHurricane to $factionStanding.eyeOfHurricane + 2)
+](elseif: _roll.result is &quot;success&quot;)[
 The temple is peaceful. You rest.
-&lt;&lt;set $factionStanding.eyeOfHurricane = $factionStanding.eyeOfHurricane + 1&gt;&gt;
-&lt;&lt;else&gt;&gt;
+(set: $factionStanding.eyeOfHurricane to $factionStanding.eyeOfHurricane + 1)
+](else:)[
 The temple is emptying—more follow the Lunar Way each season.
-&lt;&lt;/if&gt;&gt;
+]
 
-[[Continue-&gt;1618-2]]</tw-passagedata><tw-passagedata pid="18" name="1618-2" tags="" position="975,225" size="100,100">The first crisis comes three days later.
+[[Continue-&gt;1618-2]]</tw-passagedata><tw-passagedata pid="17" name="1618-2" tags="" position="850,225" size="100,100">The first crisis comes three days later.
 
 A runner from the eastern steads: &quot;Children taken. Wolves in the night.&quot;
 
@@ -453,52 +452,49 @@ What do you do?
 
 * [[Pursue the kidnappers (combat)-&gt;Chase Scene]]
 * [[Tend the wounded (healing)-&gt;Healing Scene]]
-* [[Investigate the trail (scouting)-&gt;Trail Scene]]</tw-passagedata><tw-passagedata pid="19" name="Chase Scene" tags="" position="1100,225" size="100,100">&lt;&lt;set _charDie = (random: 1, 20)&gt;&gt;
-&lt;&lt;set _resistDie = (random: 1, 20)&gt;&gt;
+* [[Investigate the trail (scouting)-&gt;Trail Scene]]</tw-passagedata><tw-passagedata pid="18" name="Chase Scene" tags="" position="975,225" size="100,100">(set: _roll to (js-eval: &quot;roll()&quot;))
 You ride after the Telmori who took the children.
 
-Char rolled: $_charDie vs Resist $_resistDie
+Char rolled: _roll.charDie vs Resist _roll.resistDie
 Result:
 
-&lt;&lt;if _charDie &gt;= 11 and _resistDie &lt; 11&gt;&gt;
+(if: _roll.charDie &gt;= 11 and _roll.resistDie &lt; 11)[
 Victory! You catch the Telmori raiders. A bloody fight—but the children are rescued.
-&lt;&lt;set $factionStanding.wolfskinners = $factionStanding.wolfskinners + 2&gt;&gt;
-&lt;&lt;elseif _charDie &gt;= 11 and _resistDie &gt;= 11&gt;&gt;
+(set: $factionStanding.wolfskinners to $factionStanding.wolfskinners + 2)
+](elseif: _roll.charDie &gt;= 11 and _roll.resistDie &gt;= 11)[
 Mixed result. You drive them off, but the children are gone—taken to Staland.
-&lt;&lt;set $factionStanding.wolfskinners = $factionStanding.wolfskinners + 1&gt;&gt;
-&lt;&lt;else&gt;&gt;
+(set: $factionStanding.wolfskinners to $factionStanding.wolfskinners + 1)
+](else:)[
 Defeat. The Telmori are too fast. You return empty-handed.
-&lt;&lt;/if&gt;&gt;
+]
 
-[[Continue-&gt;1618 End]]</tw-passagedata><tw-passagedata pid="20" name="Healing Scene" tags="" position="1225,225" size="100,100">&lt;&lt;set _roll = (random: 1, 20)&gt;&gt;
+[[Continue-&gt;1618 End]]</tw-passagedata><tw-passagedata pid="19" name="Healing Scene" tags="" position="1100,225" size="100,100">(set: _roll to (js-eval: &quot;simpleRoll()&quot;))
 The wounded are brought to you—the stead burned, three dead, four taken.
 
-&lt;&lt;if _roll &gt;= 17&gt;&gt;
+(if: _roll.roll &gt;= 17)[
 Your healing saves lives. The survivors will remember.
-&lt;&lt;set $factionStanding.eyeOfHurricane = $factionStanding.eyeOfHurricane + 2&gt;&gt;
-&lt;&lt;elseif _roll &gt;= 11&gt;&gt;
+(set: $factionStanding.eyeOfHurricane to $factionStanding.eyeOfHurricane + 2)
+](elseif: _roll.roll &gt;= 11)[
 You do what you can. Some will live.
-&lt;&lt;set $factionStanding.eyeOfHurricane = $factionStanding.eyeOfHurricane + 1&gt;&gt;
-&lt;&lt;else&gt;&gt;
+(set: $factionStanding.eyeOfHurricane to $factionStanding.eyeOfHurricane + 1)
+](else:)[
 Two die despite your efforts. The clan mourns.
-&lt;&lt;/if&gt;&gt;
+]
 
-[[Continue-&gt;1618 End]]</tw-passagedata><tw-passagedata pid="21" name="Trail Scene" tags="" position="100,350" size="100,100">&lt;&lt;set _bonus = 0&gt;&gt;
-&lt;&lt;if $player.cult == &quot;Orlanth Rex&quot; and $factionStanding.freeSartar &gt;= 15&gt;&gt;&lt;&lt;set _bonus = 2&gt;&gt;&lt;&lt;/if&gt;&gt;
-&lt;&lt;set _roll = (random: 1, 20) + _bonus&gt;&gt;
+[[Continue-&gt;1618 End]]</tw-passagedata><tw-passagedata pid="20" name="Trail Scene" tags="" position="1225,225" size="100,100">(set: _roll to (js-eval: &quot;factionRoll()&quot;))
 You read the signs where the Telmori passed—blood, tracks, broken branches.
 
-&lt;&lt;if _roll.result is &quot;great&quot;&gt;&gt;
+(if: _roll.result is &quot;great&quot;)[
 You learn where they&#39;re hiding. You can bring war.
-&lt;&lt;set $factionStanding.freeSartar = $factionStanding.freeSartar + 2&gt;&gt;
-&lt;&lt;elseif _roll.result is &quot;success&quot;&gt;&gt;
+(set: $factionStanding.freeSartar to $factionStanding.freeSartar + 2)
+](elseif: _roll.result is &quot;success&quot;)[
 The trail leads east—but fades at Staland.
-&lt;&lt;set $factionStanding.freeSartar = $factionStanding.freeSartar + 1&gt;&gt;
-&lt;&lt;else&gt;&gt;
+(set: $factionStanding.freeSartar to $factionStanding.freeSartar + 1)
+](else:)[
 The signs confuse you. The Telmori moved cleverly.
-&lt;&lt;/if&gt;&gt;
+]
 
-[[Continue-&gt;1618 End]]</tw-passagedata><tw-passagedata pid="22" name="1618 End" tags="" position="225,350" size="100,100">&lt;&lt;set $year = 1619&gt;&gt;
+[[Continue-&gt;1618 End]]</tw-passagedata><tw-passagedata pid="21" name="1618 End" tags="" position="100,350" size="100,100">&lt;&lt;set $year = 1619&gt;&gt;
 &lt;&lt;set $season = &quot;Sea Season&quot;&gt;&gt;
 &lt;&lt;set $clanResources.wealth = $clanResources.wealth - 1&gt;&gt;
 &lt;&lt;set $clanResources.warriors = $clanResources.warriors - 1&gt;&gt;
@@ -506,11 +502,11 @@ The year ends. The Missing is over—the children are rescued, or lost to the we
 
 &lt;&lt;if $clanResources.wealth &lt;= 5&gt;&gt;
 Despite your efforts, the clan&#39;s wealth has diminished. The winter will be hard.
-&lt;&lt;/if&gt;&gt;
+&lt;/if&gt;
 
 The war is coming. You can feel it in the wind.
 
-[[Book Two]-&gt;Season Transition]</tw-passagedata><tw-passagedata pid="23" name="Season Transition" tags="" position="350,350" size="100,100">&lt;&lt;remember $year&gt;&gt;
+[[Book Two]-&gt;Season Transition]</tw-passagedata><tw-passagedata pid="22" name="Season Transition" tags="" position="225,350" size="100,100">&lt;&lt;remember $year&gt;&gt;
 &lt;&lt;remember $season&gt;&gt;
 &lt;&lt;set $endingType = &quot;none&quot;&gt;&gt;
 &lt;&lt;if $factionStanding.freeSartar &gt;= 20 and $factionStanding.wolfskinners &gt;= 15&gt;&gt;
@@ -519,7 +515,7 @@ The war is coming. You can feel it in the wind.
 &lt;&lt;set $endingType = &quot;collaboration&quot;&gt;&gt;
 &lt;&lt;elseif $clanResources.wealth &lt;= 5&gt;&gt;
 &lt;&lt;set $endingType = &quot;exile&quot;&gt;&gt;
-&lt;&lt;/if&gt;&gt;
+&lt;/if&gt;
 
 You have completed Year $year.
 
@@ -531,7 +527,7 @@ The Lunar Way spreads through the clan. Survival comes at a cost.
 The clan crumbles. Only scattered survivors remain to carry on.
 &lt;&lt;else&gt;&gt;
 Your path remains unwritten. The future hangs in balance.
-&lt;&lt;/if&gt;&gt;
+&lt;/if&gt;
 
 &lt;&lt;if $year &gt;= 1625&gt;&gt;
 Your current status:
@@ -543,26 +539,19 @@ Your current status:
 Ending: $endingType
 &lt;&lt;else&gt;&gt;
 What memories will carry you into $year+1?
-&lt;&lt;/if&gt;&gt;
+&lt;/if&gt;
 
-[[End Demo]]</tw-passagedata><tw-passagedata pid="24" name="Ending Check" tags="" position="475,350" size="100,100">&lt;&lt;set $endingType = &quot;none&quot;&gt;&gt;
-&lt;&lt;if $factionStanding.freeSartar &gt;= 20 and $factionStanding.wolfskinners &gt;= 15&gt;&gt;
-&lt;&lt;set $endingType = &quot;freedom&quot;&gt;&gt;
-&lt;&lt;elseif $factionStanding.moonWinds &gt;= 20&gt;&gt;
-&lt;&lt;set $endingType = &quot;collaboration&quot;&gt;&gt;
-&lt;&lt;elseif $clanResources.wealth &lt;= 5&gt;&gt;
-&lt;&lt;set $endingType = &quot;exile&quot;&gt;&gt;
-&lt;&lt;/if&gt;&gt;
+[[End Demo]]</tw-passagedata><tw-passagedata pid="23" name="Ending Check" tags="" position="350,350" size="100,100">(js-eval: &quot;checkEnding()&quot;)
 
-&lt;&lt;if _ending == &quot;freedom&quot;&gt;&gt;
-&lt;&lt;set $gameLog += (array: &quot;The Red Cow clan has won freedom!&quot;)&gt;&gt;
-&lt;&lt;elseif _ending == &quot;collaboration&quot;&gt;&gt;
-&lt;&lt;set $gameLog += (array: &quot;The clan survives under Lunar rule.&quot;)&gt;&gt;
-&lt;&lt;elseif _ending == &quot;exile&quot;&gt;&gt;
-&lt;&lt;set $gameLog += (array: &quot;The clan has fallen. Exile awaits.&quot;)&gt;&gt;
-&lt;&lt;else&gt;&gt;
-&lt;&lt;set $gameLog += (array: &quot;The future remains unwritten.&quot;)&gt;&gt;
-&lt;&lt;/if&gt;&gt;</tw-passagedata></tw-storydata>
+(if: $endingType is &quot;freedom&quot;)[
+(set: $gameLog to $gameLog + (array: &quot;The Red Cow clan has won freedom!&quot;))
+](elseif: $endingType is &quot;collaboration&quot;)[
+(set: $gameLog to $gameLog + (array: &quot;The clan survives under Lunar rule.&quot;))
+](elseif: $endingType is &quot;exile&quot;)[
+(set: $gameLog to $gameLog + (array: &quot;The clan has fallen. Exile awaits.&quot;))
+](else:)[
+(set: $gameLog to $gameLog + (array: &quot;The future remains unwritten.&quot;))
+]</tw-passagedata></tw-storydata>
 <script title="Twine engine code" data-main="harlowe">"use strict";function _defineProperty(e,t,n){return t in e?Object.defineProperty(e,t,{value:n,enumerable:!0,configurable:!0,writable:!0}):e[t]=n,e}function _createForOfIteratorHelper(e,t){var n="undefined"!=typeof Symbol&&e[Symbol.iterator]||e["@@iterator"];if(!n){if(Array.isArray(e)||(n=_unsupportedIterableToArray(e))||t&&e&&"number"==typeof e.length){n&&(e=n);var r=0,t=function(){};return{s:t,n:function(){return r>=e.length?{done:!0}:{done:!1,value:e[r++]}},e:function(e){throw e},f:t}}throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}var a,o=!0,i=!1;return{s:function(){n=n.call(e)},n:function(){var e=n.next();return o=e.done,e},e:function(e){i=!0,a=e},f:function(){try{o||null==n.return||n.return()}finally{if(i)throw a}}}}function _slicedToArray(e,t){return _arrayWithHoles(e)||_iterableToArrayLimit(e,t)||_unsupportedIterableToArray(e,t)||_nonIterableRest()}function _nonIterableRest(){throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}function _iterableToArrayLimit(e,t){var n=null==e?null:"undefined"!=typeof Symbol&&e[Symbol.iterator]||e["@@iterator"];if(null!=n){var r,a,o=[],i=!0,s=!1;try{for(n=n.call(e);!(i=(r=n.next()).done)&&(o.push(r.value),!t||o.length!==t);i=!0);}catch(e){s=!0,a=e}finally{try{i||null==n.return||n.return()}finally{if(s)throw a}}return o}}function _arrayWithHoles(e){if(Array.isArray(e))return e}function _toConsumableArray(e){return _arrayWithoutHoles(e)||_iterableToArray(e)||_unsupportedIterableToArray(e)||_nonIterableSpread()}function _nonIterableSpread(){throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}function _unsupportedIterableToArray(e,t){if(e){if("string"==typeof e)return _arrayLikeToArray(e,t);var n=Object.prototype.toString.call(e).slice(8,-1);return"Map"===(n="Object"===n&&e.constructor?e.constructor.name:n)||"Set"===n?Array.from(e):"Arguments"===n||/^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)?_arrayLikeToArray(e,t):void 0}}function _iterableToArray(e){if("undefined"!=typeof Symbol&&null!=e[Symbol.iterator]||null!=e["@@iterator"])return Array.from(e)}function _arrayWithoutHoles(e){if(Array.isArray(e))return _arrayLikeToArray(e)}function _arrayLikeToArray(e,t){(null==t||t>e.length)&&(t=e.length);for(var n=0,r=new Array(t);n<t;n++)r[n]=e[n];return r}function _typeof(e){return(_typeof="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e})(e)}!function(){
 /**
  * @license almond 0.3.3 Copyright jQuery Foundation and other contributors.
