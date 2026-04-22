@@ -32,18 +32,29 @@ tw-include {
   font-family: "Georgia", serif;
 }
 tw-story {
-  background-color: #faf8f5;
-  color: #333333;
+  background-color: #1a1a1a;
+  color: #e0e0e0;
 }
 tw-sidebar {
-  background-color: #2b2b2b;
-  color: #dddddd;
+  background-color: #0d0d0d;
+  color: #bbbbbb;
+}
+tw-link {
+  color: #c9a227;
+}
+tw-passage tw-link {
+  color: #c9a227;
 }
 a.link {
-  color: #8b0000;
+  color: #c9a227;
 }
 a.link:hover {
   text-decoration: underline;
+  color: #ffd700;
+}
+tw-header {
+  background-color: #0d0d0d;
+  color: #e0e0e0;
 }
 </style>
 
