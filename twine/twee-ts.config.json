@@ -1,0 +1,10 @@
+{
+  "$schema": "https://unpkg.com/@rohal12/twee-ts/schemas/twee-ts.config.schema.json",
+  "sources": [
+    "red_cow_story.twee"
+  ],
+  "output": "red_cow_demo.html",
+  "formatIndex": [
+    "https://www.twine.wiki/storyformat"
+  ]
+}

@@ -2,15 +2,10 @@
 The Red Cow: Coming Storm
 
 ::StoryData
-{
-  "ifid": "6eec6162-9c7e-47cf-971b-b90b09de4264",
-  "format": "Harlowe",
-  "format-version": "3.3.0",
-  "start": "Start",
-  "metadata": {}
-}
-
-::StorySettings
+ifid: 6EEC6162-9C7E-47CF-971B-B90B09DE4264
+format: Harlowe
+format-version: 3.3.0
+start: Start
 {"type": "twine", "sidebar": true, "skip-title-screen": false, "tw-colour": "#dddddd", "mutations": true, "autosave": true, "check-naughtytimes": true}
 
 ::Stylesheet
@@ -50,151 +45,109 @@ tw-header {
 }
 </style>
 
-::Glossary
-
-::QuestGlobal
-(set: $player to null)
-(set: $party to (array:))
-(set: $year to 1618)
-(set: $season to "Sea Season")
-(set: $clanResources to (dm:)[
+::QuestGlobal <<declare>>
+$player = null
+$party = (array:)
+$year = 1618
+$season = "Sea Season"
+$clanResources = (dm:)[
   "wealth": 17,
   "warriors": 16,
   "magic": 15,
   "reputation": 14,
   "allies": 14
-])
-(set: $factionStanding to (dm:)[
+]
+$factionStanding = (dm:)[
   "freeSartar": 10,
   "eyeOfHurricane": 10,
   "conqueringStorm": 10,
   "wolfskinners": 10,
   "moonWinds": 10
-])
-(set: $arcProgress to (dm:)[
+]
+$arcProgress = (dm:)[
   "thorvald": 0,
   "erlana": 0,
   "rok": 0,
   "asvith": 0,
   "kara": 0
-])
-(set: $endingType to null)
-(set: $gameLog to (array:))
+]
+$endingType = null
+$gameLog = (array:)
+</div>
 
-::QuestFunctions [script]
-/* Custom JavaScript functions for the Red Cow game */
+::QuestFunctions [nosave]
+<<macro "roll">>
+<<set _charDie = (random: 1, 20)>>
+<<set _resistDie = (random: 1, 20)>>
+<<set _result = "mixed">>
+<<if _charDie == 20>>
+<<set _result = "critical">>
+<<elseif _charDie == 1>>
+<<set _result = "fumble">>
+<<elseif _charDie >= 11>>
+<<if _resistDie >= 11>>
+<<set _result = "mixed">>
+<<else>>
+<<set _result = "victory">>
+<</if>>
+<<else>>
+<<if _resistDie >= 11>>
+<<set _result = "defeat">>
+<<else>>
+<<set _result = "mixed">>
+<</if>>
+<</if>>
+<</if>>
+<<return (dm:)[
+  "charDie": _charDie,
+  "resistDie": _resistDie,
+  "result": _result
+]>>
+</macro>>
 
-window.roll = function() {
-    var charDie = Math.floor(Math.random() * 20) + 1;
-    var resistDie = Math.floor(Math.random() * 20) + 1;
-    var result = "mixed";
+<<macro "simpleRoll">>
+<<set _roll = (random: 1, 20)>>
+<<set _result = "fail">>
+<<if _roll >= 11>>
+<<set _result = "success">>
+<</if>>
+<<if _roll >= 17>>
+<<set _result = "great">>
+<</if>>
+<<return (dm:)[
+  "roll": _roll,
+  "result": _result
+]>>
+</macro>>
 
-    if (charDie === 20) {
-        result = "critical";
-    } else if (charDie === 1) {
-        result = "fumble";
-    } else if (charDie >= 11) {
-        if (resistDie >= 11) {
-            result = "mixed";
-        } else {
-            result = "victory";
-        }
-    } else {
-        if (resistDie >= 11) {
-            result = "defeat";
-        } else {
-            result = "mixed";
-        }
-    }
+<<macro "updateFaction">>
+<<set _current = $factionStanding.conqueringStorm>>
+<<set _current = _current + 2>>
+<<if _current > 20>><<set _current = 20>><</if>>
+<<set $factionStanding.conqueringStorm = _current>>
+</macro>>
 
-    return {
-        charDie: charDie,
-        resistDie: resistDie,
-        result: result
-    };
-};
+<<macro "updateResources">>
+<<set _current = $clanResources.wealth>>
+<<set _current = _current - 1>>
+<<if _current < 0>><<set _current = 0>><</if>>
+<<set $clanResources.wealth = _current>>
+<<set _current = $clanResources.warriors>>
+<<set _current = _current - 1>>
+<<if _current < 0>><<set _current = 0>><</if>>
+<<set $clanResources.warriors = _current>>
+</macro>>
 
-window.simpleRoll = function() {
-    var roll = Math.floor(Math.random() * 20) + 1;
-    var result = "fail";
-
-    if (roll >= 11) {
-        result = "success";
-    }
-    if (roll >= 17) {
-        result = "great";
-    }
-
-    return {
-        roll: roll,
-        result: result
-    };
-};
-
-window.factionRoll = function() {
-    var bonus = 0;
-    var player = State.variables.player || {};
-    var factionStanding = State.variables.factionStanding || {};
-
-    if (player.cult === "Orlanth Adventurous" && factionStanding.freeSartar >= 15) {
-        bonus = 2;
-    } else if (player.cult === "Ernalda" && factionStanding.eyeOfHurricane >= 15) {
-        bonus = 2;
-    } else if ((player.cult === "Storm Bull" || player.cult === "Orlanth Rex") && factionStanding.wolfskinners >= 15) {
-        bonus = 2;
-    } else if (player.cult === "Humakt" && factionStanding.eyeOfHurricane >= 15) {
-        bonus = 2;
-    }
-
-    var roll = Math.floor(Math.random() * 20) + 1 + bonus;
-    var result = "fail";
-
-    if (roll >= 11) {
-        result = "success";
-    }
-    if (roll >= 17) {
-        result = "great";
-    }
-
-    return {
-        roll: roll,
-        bonus: bonus,
-        result: result
-    };
-};
-
-window.updateFaction = function() {
-    var current = State.variables.factionStanding.conqueringStorm;
-    current = current + 2;
-    if (current > 20) current = 20;
-    State.variables.factionStanding.conqueringStorm = current;
-};
-
-window.updateResources = function() {
-    var current = State.variables.clanResources.wealth;
-    current = current - 1;
-    if (current < 0) current = 0;
-    State.variables.clanResources.wealth = current;
-
-    current = State.variables.clanResources.warriors;
-    current = current - 1;
-    if (current < 0) current = 0;
-    State.variables.clanResources.warriors = current;
-};
-
-window.checkEnding = function() {
-    State.variables.endingType = "none";
-    var factionStanding = State.variables.factionStanding;
-    var clanResources = State.variables.clanResources;
-
-    if (factionStanding.freeSartar >= 20 && factionStanding.wolfskinners >= 15) {
-        State.variables.endingType = "freedom";
-    } else if (factionStanding.moonWinds >= 20) {
-        State.variables.endingType = "collaboration";
-    } else if (clanResources.wealth <= 5) {
-        State.variables.endingType = "exile";
-    }
-};
+<<macro "checkEnding">>
+<<set $endingType = "none">>
+<<if $factionStanding.freeSartar >= 20 and $factionStanding.wolfskinners >= 15>>
+<<set $endingType = "freedom">>
+<<elseif $factionStanding.moonWinds >= 20>>
+<<set $endingType = "collaboration">>
+<<elseif $clanResources.wealth <= 5>>
+<<set $endingType = "exile">>
+<</if>>
+</macro>>
 
 ::Start
 The wind sweeps down from the Quivin Mountains, carrying the scent of snow. You stand at the gates of Red Cow Fort, watching the gray sky—knowing that the coming years will test everything your clan holds dear.
@@ -214,7 +167,7 @@ Where do your loyalties lie? Choose your character:
 * [[Asvith Silver-Step->Character Select: Asvith]]
 * [[Kara Silent-Blade->Character Select: Kara]]
 
-</if>
+<</if>>
 
 ::Character Select: Thorvald
 <<unset $player>>
@@ -445,51 +398,56 @@ What do you do?
 * [[Visit the temple (story)->Temple Visit]]
 
 ::Moot 1618
-(set: _roll to (js-eval: "factionRoll()"))
+<<set _bonus = 0>>
+<<if $player.cult == "Orlanth Adventurous" and $factionStanding.freeSartar >= 15>><<set _bonus = 2>><</if>>
+<<set _roll = (random: 1, 20) + _bonus>>
 The moot gathers at the fort—the chieftain's council, debating the response to Lunar tribute demands. Broddi Strong-Kin speaks for peace. Darna Longcoat shouts for war.
 
-(if: _roll.result is "great")[
+<<if _roll >= 17>>
 You sway the moot with your words. ((Your contribution helps the Conquering Storm faction gain influence.))
-(set: $factionStanding.conqueringStorm to $factionStanding.conqueringStorm + 2)
-](elseif: _roll.result is "success")[
+<<set $factionStanding.conqueringStorm = $factionStanding.conqueringStorm + 2>>
+<<elseif _roll >= 11>>
 You speak well, and the moot considers your words.
-(set: $factionStanding.conqueringStorm to $factionStanding.conqueringStorm + 1)
-](else:)[
+<<set $factionStanding.conqueringStorm = $factionStanding.conqueringStorm + 1>>
+<<else>>
 Your words fall flat—the council is divided, and nothing is resolved.
-]
+<</if>>
 
 [[Continue->1618-2]]
 
 ::Border Patrol
-(set: _roll to (js-eval: "factionRoll()"))
+<<set _bonus = 0>>
+<<if ($player.cult == "Storm Bull" or $player.cult == "Orlanth Rex") and $factionStanding.wolfskinners >= 15>><<set _bonus = 2>><</if>>
+<<set _roll = (random: 1, 20) + _bonus>>
 You ride the borders of the clan lands, watching for Telmori signs.
 
-(if: _roll.result is "great")[
+<<if _roll >= 17>>
 You spot signs of a Telmori scouting party—three wolves, moving east. You report to the thanes.
-(set: $factionStanding.wolfskinners to $factionStanding.wolfskinners + 2)
-(set: $arcProgress.rok to $arcProgress.rok + 1)
-](elseif: _roll.result is "success")[
+<<set $factionStanding.wolfskinners = $factionStanding.wolfskinners + 2>>
+<<elseif _roll >= 11>>
 You see nothing unusual—but the ride is peaceful.
-(set: $factionStanding.wolfskinners to $factionStanding.wolfskinners + 1)
-](else:)[
+<<set $factionStanding.wolfskinners = $factionStanding.wolfskinners + 1>>
+<<else>>
 You nearly ride into a Telmori patrol—they let you go, for now. A warning.
-]
+<</if>>
 
 [[Continue->1618-2]]
 
 ::Temple Visit
-(set: _roll to (js-eval: "factionRoll()"))
+<<set _bonus = 0>>
+<<if $player.cult == "Ernalda" and $factionStanding.eyeOfHurricane >= 15>><<set _bonus = 2>><</if>>
+<<set _roll = (random: 1, 20) + _bonus>>
 You visit the temple of your cult—Ernalda's shrine for healing, Orlanth's hall for war.
 
-(if: _roll.result is "great")[
+<<if _roll >= 17>>
 The priest blesses you. You feel the favor of the gods.
-(set: $factionStanding.eyeOfHurricane to $factionStanding.eyeOfHurricane + 2)
-](elseif: _roll.result is "success")[
+<<set $factionStanding.eyeOfHurricane = $factionStanding.eyeOfHurricane + 2>>
+<<elseif _roll >= 11>>
 The temple is peaceful. You rest.
-(set: $factionStanding.eyeOfHurricane to $factionStanding.eyeOfHurricane + 1)
-](else:)[
+<<set $factionStanding.eyeOfHurricane = $factionStanding.eyeOfHurricane + 1>>
+<<else>>
 The temple is emptying—more follow the Lunar Way each season.
-]
+<</if>>
 
 [[Continue->1618-2]]
 
@@ -507,53 +465,56 @@ What do you do?
 * [[Investigate the trail (scouting)->Trail Scene]]
 
 ::Chase Scene
-(set: _roll to (js-eval: "roll()"))
+<<set _charDie = (random: 1, 20)>>
+<<set _resistDie = (random: 1, 20)>>
 You ride after the Telmori who took the children.
 
-Char rolled: _roll.charDie vs Resist _roll.resistDie
+Char rolled: $_charDie vs Resist $_resistDie
 Result:
 
-(if: _roll.charDie >= 11 and _roll.resistDie < 11)[
+<<if _charDie >= 11 and _resistDie < 11>>
 Victory! You catch the Telmori raiders. A bloody fight—but the children are rescued.
-(set: $factionStanding.wolfskinners to $factionStanding.wolfskinners + 2)
-](elseif: _roll.charDie >= 11 and _roll.resistDie >= 11)[
+<<set $factionStanding.wolfskinners = $factionStanding.wolfskinners + 2>>
+<<elseif _charDie >= 11 and _resistDie >= 11>>
 Mixed result. You drive them off, but the children are gone—taken to Staland.
-(set: $factionStanding.wolfskinners to $factionStanding.wolfskinners + 1)
-](else:)[
+<<set $factionStanding.wolfskinners = $factionStanding.wolfskinners + 1>>
+<<else>>
 Defeat. The Telmori are too fast. You return empty-handed.
-]
+<</if>>
 
 [[Continue->1618 End]]
 
 ::Healing Scene
-(set: _roll to (js-eval: "simpleRoll()"))
+<<set _roll = (random: 1, 20)>>
 The wounded are brought to you—the stead burned, three dead, four taken.
 
-(if: _roll.roll >= 17)[
+<<if _roll >= 17>>
 Your healing saves lives. The survivors will remember.
-(set: $factionStanding.eyeOfHurricane to $factionStanding.eyeOfHurricane + 2)
-](elseif: _roll.roll >= 11)[
+<<set $factionStanding.eyeOfHurricane = $factionStanding.eyeOfHurricane + 2>>
+<<elseif _roll >= 11>>
 You do what you can. Some will live.
-(set: $factionStanding.eyeOfHurricane to $factionStanding.eyeOfHurricane + 1)
-](else:)[
+<<set $factionStanding.eyeOfHurricane = $factionStanding.eyeOfHurricane + 1>>
+<<else>>
 Two die despite your efforts. The clan mourns.
-]
+<</if>>
 
 [[Continue->1618 End]]
 
 ::Trail Scene
-(set: _roll to (js-eval: "factionRoll()"))
+<<set _bonus = 0>>
+<<if $player.cult == "Orlanth Rex" and $factionStanding.freeSartar >= 15>><<set _bonus = 2>><</if>>
+<<set _roll = (random: 1, 20) + _bonus>>
 You read the signs where the Telmori passed—blood, tracks, broken branches.
 
-(if: _roll.result is "great")[
+<<if _roll >= 17>>
 You learn where they're hiding. You can bring war.
-(set: $factionStanding.freeSartar to $factionStanding.freeSartar + 2)
-](elseif: _roll.result is "success")[
+<<set $factionStanding.freeSartar = $factionStanding.freeSartar + 2>>
+<<elseif _roll >= 11>>
 The trail leads east—but fades at Staland.
-(set: $factionStanding.freeSartar to $factionStanding.freeSartar + 1)
-](else:)[
+<<set $factionStanding.freeSartar = $factionStanding.freeSartar + 1>>
+<<else>>
 The signs confuse you. The Telmori moved cleverly.
-]
+<</if>>
 
 [[Continue->1618 End]]
 
@@ -566,11 +527,11 @@ The year ends. The Missing is over—the children are rescued, or lost to the we
 
 <<if $clanResources.wealth <= 5>>
 Despite your efforts, the clan's wealth has diminished. The winter will be hard.
-</if>
+<</if>>
 
 The war is coming. You can feel it in the wind.
 
-[[Book Two]->Season Transition]
+[[Book Two]->Season Transition]]
 
 ::Season Transition
 <<remember $year>>
@@ -582,7 +543,7 @@ The war is coming. You can feel it in the wind.
 <<set $endingType = "collaboration">>
 <<elseif $clanResources.wealth <= 5>>
 <<set $endingType = "exile">>
-</if>
+<</if>>
 
 You have completed Year $year.
 
@@ -594,7 +555,7 @@ The Lunar Way spreads through the clan. Survival comes at a cost.
 The clan crumbles. Only scattered survivors remain to carry on.
 <<else>>
 Your path remains unwritten. The future hangs in balance.
-</if>
+<</if>>
 
 <<if $year >= 1625>>
 Your current status:
@@ -606,19 +567,16 @@ Your current status:
 Ending: $endingType
 <<else>>
 What memories will carry you into $year+1?
-</if>
+<</if>>
 
 [[End Demo]]
 
 ::Ending Check
-(js-eval: "checkEnding()")
-
-(if: $endingType is "freedom")[
-(set: $gameLog to $gameLog + (array: "The Red Cow clan has won freedom!"))
-](elseif: $endingType is "collaboration")[
-(set: $gameLog to $gameLog + (array: "The clan survives under Lunar rule."))
-](elseif: $endingType is "exile")[
-(set: $gameLog to $gameLog + (array: "The clan has fallen. Exile awaits."))
-](else:)[
-(set: $gameLog to $gameLog + (array: "The future remains unwritten."))
-]
+<<set $endingType = "none">>
+<<if $factionStanding.freeSartar >= 20 and $factionStanding.wolfskinners >= 15>>
+<<set $endingType = "freedom">>
+<<elseif $factionStanding.moonWinds >= 20>>
+<<set $endingType = "collaboration">>
+<<elseif $clanResources.wealth <= 5>>
+<<set $endingType = "exile">>
+<</if>>
