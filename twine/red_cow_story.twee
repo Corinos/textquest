@@ -1,0 +1,678 @@
+::StoryTitle
+The Red Cow: Coming Storm
+
+::StoryData
+{
+  "ifid": "A1B2C3D4-E5F6-7890-ABCD-EF1234567890",
+  "format": "Harlowe",
+  "format-version": "3.3.0",
+  "start": "Start",
+  "metadata": {}
+}
+
+::StorySettings
+{
+  "type": "twine",
+  "sidebar": true,
+  "skip-title-screen": false,
+  "tw-colour": "#dddddd",
+  "mutations": true,
+  "autosave": true,
+  "check-naughtytimes": true
+}
+
+::Stylesheet
+<style>
+tw-passage {
+  font-family: "Georgia", serif;
+  font-size: 1.1em;
+  line-height: 1.6;
+}
+tw-include {
+  font-family: "Georgia", serif;
+}
+tw-story {
+  background-color: #faf8f5;
+  color: #333333;
+}
+tw-sidebar {
+  background-color: #2b2b2b;
+  color: #dddddd;
+}
+a.link {
+  color: #8b0000;
+}
+a.link:hover {
+  text-decoration: underline;
+}
+</style>
+
+::Glossary
+
+::QuestGlobal <<declare>>
+$player = null
+$party = (array:)
+$year = 1618
+$season = "Sea Season"
+$clanResources = (dm:)[
+  "wealth": 17,
+  "warriors": 16,
+  "magic": 15,
+  "reputation": 14,
+  "allies": 14
+]
+$factionStanding = (dm:)[
+  "freeSartar": 10,
+  "eyeOfHurricane": 10,
+  "conqueringStorm": 10,
+  "wolfskinners": 10,
+  "moonWinds": 10
+]
+$arcProgress = (dm:)[
+  "thorvald": 0,
+  "erlana": 0,
+  "rok": 0,
+  "asvith": 0,
+  "kara": 0
+]
+$endingType = null
+$gameLog = (array:)
+</div>
+
+::QuestFunctions [nosave]
+<<macro "roll">>
+<<set _abil = $args[0]>>
+<<set _resist = $args[1]>>
+<<set _charDie = (random: 1, 20)>>
+<<set _resistDie = (random: 1, 20)>>
+<<set _result = "mixed">>
+<<if _charDie == 20>>
+<<set _result = "critical">>
+<<elseif _charDie == 1>>
+<<set _result = "fumble">>
+<<elseif _charDie >= 11>>
+<<if _resistDie >= 11>>
+<<set _result = "mixed">>
+<<else>>
+<<set _result = "victory">>
+<</if>>
+<<else>>
+<<if _resistDie >= 11>>
+<<set _result = "defeat">>
+<<else>>
+<<set _result = "mixed">>
+<</if>>
+<</if>>
+<</if>>
+<<return (dm:)[
+  "charDie": _charDie,
+  "resistDie": _resistDie,
+  "result": _result,
+  "ability": _abil,
+  "resistance": _resist
+]>>
+</macro>>
+
+<<macro "simpleRoll">>
+<<set _abil = $args[0]>>
+<<set _tn = 11>>
+<<if $args[1]>>
+<<set _tn = $args[1]>>
+<</if>>
+<<set _roll = (random: 1, 20)>>
+<<set _result = "fail">>
+<<if _roll >= _tn>>
+<<set _result = "success">>
+<</if>>
+<<if _roll >= 17>>
+<<set _result = "great">>
+<</if>>
+<<return (dm:)[
+  "roll": _roll,
+  "result": _result,
+  "TN": _tn
+]>>
+</macro>>
+
+<<macro "factionRoll">>
+<<set _abil = $args[0]>>
+<<set _tn = 11>>
+<<if $args[1]>>
+<<set _tn = $args[1]>>
+<</if>>
+<<set _bonus = 0>>
+<<if $player.cult == "Orlanth Adventurous">>
+<<if $factionStanding.freeSartar >= 15>>
+<<set _bonus = 2>>
+<</if>>
+<<elseif $player.cult == "Ernalda">>
+<<if $factionStanding.eyeOfHurricane >= 15>>
+<<set _bonus = 2>>
+<</if>>
+<<elseif $player.cult == "Storm Bull">>
+<<if $factionStanding.wolfskinners >= 15>>
+<<set _bonus = 2>>
+<</if>>
+<<elseif $player.cult == "Orlanth Rex">>
+<<if $factionStanding.wolfskinners >= 15>>
+<<set _bonus = 2>>
+<</if>>
+<<elseif $player.cult == "Humakt">>
+<<if $factionStanding.eyeOfHurricane >= 15>>
+<<set _bonus = 2>>
+<</if>>
+<</if>>
+<<set _roll = (random: 1, 20) + _bonus>>
+<<set _result = "fail">>
+<<if _roll >= _tn>>
+<<set _result = "success">>
+<</if>>
+<<if _roll >= 17>>
+<<set _result = "great">>
+<</if>>
+<<return (dm:)[
+  "roll": _roll,
+  "bonus": _bonus,
+  "result": _result,
+  "TN": _tn
+]>>
+</macro>>
+
+<<macro "updateFaction">>
+<<set _faction = $args[0]>>
+<<set _amount = $args[1]>>
+<<set _current = $factionStanding[_faction]>>
+<<set _new = _current + _amount>>
+<<if _new > 20>>
+<<set _new = 20>>
+<</if>>
+<<if _new < 0>>
+<<set _new = 0>>
+<</if>>
+<<set $factionStanding[_faction] = _new>>
+</macro>>
+
+<<macro "updateResources">>
+<<set _resource = $args[0]>>
+<<set _amount = $args[1]>>
+<<set _current = $clanResources[_resource]>>
+<<set _new = _current + _amount>>
+<<if _new < 0>>
+<<set _new = 0>>
+<</if>>
+<<set $clanResources[_resource] = _new>>
+</macro>>
+
+<<macro "checkQuestUnlock">>
+<<set _questId = $args[0]>>
+<<set _unlocked = false>>
+<<if _questId == "huntJogar">>
+<<if $factionStanding.freeSartar >= 10>>
+<<set _unlocked = true>>
+<</if>>
+<</if>>
+<<if _questId == "husbandTruth">>
+<<if $arcProgress.kara >= 3>>
+<<set _unlocked = true>>
+<</if>>
+<</if>>
+<<if _questId == "elevenLights">>
+<<if $year >= 1624>>
+<<set _unlocked = true>>
+<</if>>
+<</if>>
+<<if _questId == "liberation">>
+<<if $factionStanding.freeSartar + $factionStanding.wolfskinners >= 25>>
+<<set _unlocked = true>>
+<</if>>
+<</if>>
+<<return _unlocked>>
+</macro>>
+
+<<macro "advanceArc">>
+<<set _character = $args[0]>>
+<<set _amount = 1>>
+<<if $args[1]>>
+<<set _amount = $args[1]>>
+<</if>>
+<<set _current = $arcProgress[_character]>>
+<<set $arcProgress[_character] = _current + _amount>>
+</macro>>
+
+<<macro "checkEnding">>
+<<set _ending = null>>
+<<if $factionStanding.freeSartar >= 20 and $factionStanding.wolfskinners >= 15>>
+<<set _ending = "freedom">>
+<<elseif $factionStanding.moonWinds >= 20>>
+<<set _ending = "collaboration">>
+<<elseif $clanResources.wealth <= 5>>
+<<set _ending = "exile">>
+<</if>>
+<<set $endingType = _ending>>
+<<return _ending>>
+</macro>>
+
+::Start
+The wind sweeps down from the Quivin Mountains, carrying the scent of snow. You stand at the gates of Red Cow Fort, watching the gray sky—knowing that the coming years will test everything your clan holds dear.
+
+But first, you must choose your hero.
+
+[[Select Your Hero]]
+
+::Select Your Hero
+Where do your loyalties lie? Choose your character:
+
+<<if $player is null>>
+
+* [[Thorvald Storm-Speaker->Character Select: Thorvald]]
+* [[Erlana Earth-Keeper->Character Select: Erlana]]
+* [[Rok Thunder-Mouth->Character Select: Rok]]
+* [[Asvith Silver-Step->Character Select: Asvith]]
+* [[Kara Silent-Blade->Character Select: Kara]]
+
+<</if>>
+
+::Character Select: Thorvald
+<<unset $player>>
+<<set $player = (dm:)[
+  "name": "Thorvald Storm-Speaker",
+  "bloodline": "Tormakting",
+  "cult": "Orlanth Adventurous",
+  "abilities": (dm:)[
+    "Spear Fighting": 17,
+    "Shield Wall": 16,
+    "Battle Cry": 15,
+    "Axe Mastery": 14,
+    "Fearless": 14,
+    "Loyalty to Clan": 16,
+    "Command": 15,
+    "Athletics": 14,
+    "Awareness": 13,
+    "Endurance": 15,
+    "Intimidation": 14,
+    "Oral History": 12,
+    "Riding": 11
+  ],
+  "keywords": (dm:)[
+    "Storm Warrior": 17
+  ],
+  "flaws": (dm:)[
+    "Oath-Breaker Hunt": 3,
+    "Reckless Courage": 2
+  ],
+  "equipment": (dm:)[
+    "Iron Spear": 15,
+    "Wooden Shield": 14,
+    "Chainmail": 13,
+    "War Axe": 14
+  ],
+  "hp": 18,
+  "maxHp": 18,
+  "description": "A housecarl sworn to defend the Red Cow clan. His brother was killed by Lunar soldiers. He serves as Broddi's personal guard, and his hatred of the Lunar Empire burns like wildfire."
+]>>
+You are Thorvald Storm-Speaker, a housecarl sworn to defend the chieftain. Your brother died when the Lunars came—you watched him fall, and you swore an oath: no more foreign swords on Red Cow land.
+
+[[Begin the Campaign]]
+
+::Character Select: Erlana
+<<unset $player>>
+<<set $player = (dm:)[
+  "name": "Erlana Earth-Keeper",
+  "bloodline": "Kerenelling",
+  "cult": "Ernalda",
+  "abilities": (dm:)[
+    "Healing": 17,
+    "Bless Crops": 16,
+    "Earth Magic": 15,
+    "Midwifery": 14,
+    "Weather Sense": 12,
+    "Empathy": 15,
+    "Clarity": 14,
+    "Patience": 14,
+    "Ritual": 15,
+    "Herbal Lore": 14,
+    "Water Magic": 13,
+    "Faith": 15,
+    "Oratory": 12
+  ],
+  "keywords": (dm:)[
+    "Earth Cultist": 17
+  ],
+  "flaws": (dm:)[
+    "Father's Shadow": 3,
+    "Forbidden Knowledge": 2
+  ],
+  "equipment": (dm:)[
+    "Healing Herbs": 15,
+    "Ceremony Tools": 14,
+    "Blessing Waters": 14
+  ],
+  "hp": 12,
+  "maxHp": 12,
+  "description": "A priestess of Ernalda whose father was the first to convert to the Lunar Way. The clan whispers about her bloodline—but her healing gifts are real. She seeks to prove her loyalty through service."
+]>>
+You are Erlana Earth-Keeper, tender of the sacred herds. Your father brought the Lunar missionaries into the clan—and died prosperous while others suffered. You carry his shame like a stone around your neck, and prove your worth with every healing.
+
+[[Begin the Campaign]]
+
+::Character Select: Rok
+<<unset $player>>
+<<set $player = (dm:)[
+  "name": "Rok Thunder-Mouth",
+  "bloodline": "Bolthoring",
+  "cult": "Storm Bull",
+  "abilities": (dm:)[
+    "Berserker Rage": 17,
+    "Wolf-Killing": 17,
+    "Chaos Sense": 15,
+    "Wild Hunt": 14,
+    "Iron Fury": 15,
+    "Ferocity": 16,
+    "Tracking": 15,
+    "Athletics": 15,
+    "Endurance": 16,
+    "Intimidation": 15,
+    "Survival": 14,
+    "Strength": 16,
+    "Fearless": 13
+  ],
+  "keywords": (dm:)[
+    "Storm Bull Champion": 17
+  ],
+  "flaws": (dm:)[
+    "Red Rage": 3,
+    "Moon Haunting": 2
+  ],
+  "equipment": (dm:)[
+    "Two-Handed Axe": 16,
+    "Enchanted Blade": 15,
+    "Trophy Rack": 13
+  ],
+  "hp": 20,
+  "maxHp": 20,
+  "description": "A Storm Bull berserker who watched his family die on a moonless night. The Telmori took everyone—but him. He lives now only for the hunt, for killing werewolves until they learn to fear the name Rok Thunder-Mouth."
+]>>
+You are Rok Thunder-Mouth, voice of the storm. The Telmori came on a moonless night—what remained of your stead was embers and blood in the snow. You alone survived. Now you hunt them with a fury that even your brothers in the Storm Bull cult fear.
+
+[[Begin the Campaign]]
+
+::Character Select: Asvith
+<<unset $player>>
+<<set $player = (dm:)[
+  "name": "Asvith Silver-Step",
+  "bloodline": "Sarostiping",
+  "cult": "Orlanth Rex",
+  "abilities": (dm:)[
+    "Horse Mastery": 17,
+    "Scout": 16,
+    "Mounted Combat": 15,
+    "Silent Movement": 15,
+    "Long Vision": 14,
+    "Deception": 14,
+    "Observation": 15,
+    "Loyalty (Rebellion)": 14,
+    "Athletics": 14,
+    "Navigation": 15,
+    "Survival": 13,
+    "Messaging": 12,
+    "Stealth": 14
+  ],
+  "keywords": (dm:)[
+    "Horse-Lord": 17
+  ],
+  "flaws": (dm:)[
+    "The Pretended Betrayer": 3,
+    "Blood Debt": 2
+  ],
+  "equipment": (dm:)[
+    "Cavalry Lance": 15,
+    "Long Bow": 13,
+    "Swift Horse": 16,
+    "Scout's Kit": 13
+  ],
+  "hp": 16,
+  "maxHp": 16,
+  "description": "A scout whose family breeds the finest horses in the clan. He rides for Jomes Hostralos against the Telmori—but his true loyalty is to Kallyr Starbrow's rebellion. His father's death was no accident—and he knows who caused it."
+]>>
+You are Asvith Silver-Step, rider of the border. You serve Jomes, the Lunars' puppet—but you feed information to the rebels. Somewhere in this clan sits the man who sold your father to the wolves. You wait. You watch. You ride.
+
+[[Begin the Campaign]]
+
+::Character Select: Kara
+<<unset $player>>
+<<set $player = (dm:)[
+  "name": "Kara Silent-Blade",
+  "bloodline": "Osmanning",
+  "cult": "Humakt",
+  "abilities": (dm:)[
+    "Sword Mastery": 17,
+    "Truth Seeking": 16,
+    "Severance": 15,
+    "Dueling": 14,
+    "Disarm": 13,
+    "Investigation": 15,
+    "Insight": 15,
+    "Stealth": 14,
+    "Athletics": 13,
+    "Endurance": 14,
+    "Medicine": 12,
+    "Interrogation": 14,
+    "Deception": 12
+  ],
+  "keywords": (dm:)[
+    "Sword Maiden": 17
+  ],
+  "flaws": (dm:)[
+    "Cannot Lie": 3,
+    "Blood Enemy": 2
+  ],
+  "equipment": (dm:)[
+    "Longsword": 16,
+    "Short Sword": 15,
+    "Throwing Knives": 13,
+    "Truth Wire": 14
+  ],
+  "hp": 15,
+  "maxHp": 15,
+  "description": "A sword-wielder married into the clan—but her husband died on their wedding night. Not an accident—murder. She went to the temple of Humakt and learned the truth-seeker's way. Somewhere in the Red Cow, someone knows what happened."
+]>>
+You are Kara Silent-Blade, truth-seeker. Your husband died on your wedding night—killed with a blade, not a beast. The clan says accident. Humakt's priests say murder. You will find the killer. And when you do, you will speak the truth before you cut.
+
+[[Begin the Campaign]]
+
+::Begin the Campaign
+You are $player.name.
+
+$player.description
+
+The year is $year. The season is $season. The Hero Wars are coming—and the Red Cow clan must survive.
+
+[[Continue->1618 Opening]]
+
+::1618 Opening
+The wind carries whispers from the east. The Telmori have been quiet for a season—but the elders remember when they wiped out the Maboder tribe. The Lunar Empire rules through their puppet prince, and the rebellion stirs in the hills.
+
+You stand at the gates of Red Cow Fort, looking out at the lands your ancestors fought for.
+
+What do you do?
+
+* [[Join the moot (political)->Moot 1618]]
+* [[Patrol the borders (action)->Border Patrol]]
+* [[Visit the temple (story)->Temple Visit]]
+
+::Moot 1618
+<<set _roll = (call: "factionRoll", "Oratory", 15)>>
+The moot gathers at the fort—the chieftain's council, debating the response to Lunar tribute demands. Broddi Strong-Kin speaks for peace. Darna Longcoat shouts for war.
+
+<<if _roll.result is "great">>
+You sway the moot with your words. ((Your contribution helps the Conquering Storm faction gain influence.))
+<<call "updateFaction", "conqueringStorm", 2>>
+<<call "advanceArc", "thorvald", 1>>
+<<elseif _roll.result is "success">>
+You speak well, and the moot considers your words.
+<<call "updateFaction", "conqueringStorm", 1>>
+<<else>>
+Your words fall flat—the council is divided, and nothing is resolved.
+<</if>>
+
+[[Continue->1618-2]]
+
+::Border Patrol
+<<set _roll = (call: "factionRoll", "Awareness", 13)>>
+You ride the borders of the clan lands, watching for Telmori signs.
+
+<<if _roll.result is "great">>
+You spot signs of a Telmori scouting party—three wolves, moving east. You report to the thanes.
+<<call "updateFaction", "wolfskinners", 2>>
+<<call "advanceArc", "rok", 1>>
+<<elseif _roll.result is "success">>
+You see nothing unusual—but the ride is peaceful.
+<<call "updateFaction", "wolfskinners", 1>>
+<<else>>
+You nearly ride into a Telmori patrol—they let you go, for now. A warning.
+<</if>>
+
+[[Continue->1618-2]]
+
+::Temple Visit
+<<set _roll = (call: "factionRoll", "Faith", 15)>>
+You visit the temple of your cult—Ernalda's shrine for healing, Orlanth's hall for war.
+
+<<if _roll.result is "great">>
+The priest blesses you. You feel the favor of the gods.
+<<call "updateFaction", "eyeOfHurricane", 2>>
+<<call "advanceArc", "erlana", 1>>
+<<elseif _roll.result is "success">>
+The temple is peaceful. You rest.
+<<call "updateFaction", "eyeOfHurricane", 1>>
+<<else>>
+The temple is emptying—more follow the Lunar Way each season.
+<</if>>
+
+[[Continue->1618-2]]
+
+::1618-2
+The first crisis comes three days later.
+
+A runner from the eastern steads: "Children taken. Wolves in the night."
+
+The Telmori have broken the peace. The Missing has begun.
+
+What do you do?
+
+* [[Pursue the kidnappers (combat)->Chase Scene]]
+* [[Tend the wounded (healing)->Healing Scene]]
+* [[Investigate the trail (scouting)->Trail Scene]]
+
+::Chase Scene
+<<set _roll = (call: "roll")>>
+You ride after the Telmori who took the children.
+
+Char rolled: $_roll.charDie vs Resist $_roll.resistDie
+Result: $_roll.result
+
+<<if $_roll.result is "victory" or $_roll.result is "critical">>
+You catch the Telmori raiders. A bloody fight—but the children are rescued.
+<<call "updateFaction", "wolfskinners", 2>>
+<<call "advanceArc", "rok", 1>>
+<<elseif $_roll.result is "mixed">>
+You drive them off, but the children are gone—taken to Staland.
+<<call "updateFaction", "wolfskinners", 1>>
+<<else>>
+The Telmori are too fast. You return empty-handed.
+<</if>>
+
+[[Continue->1618 End]]
+
+::Healing Scene
+<<set _roll = (call: "factionRoll", "Healing", 17)>>
+The wounded are brought to you—the stead burned, three dead, four taken.
+
+<<if _roll.result is "great">>
+Your healing saves lives. The survivors will remember.
+<<call "updateFaction", "eyeOfHurricane", 2>>
+<<call "advanceArc", "erlana", 1>>
+<<elseif _roll.result is "success">>
+You do what you can. Some will live.
+<<call "updateFaction", "eyeOfHurricane", 1>>
+<<else>>
+Two die despite your efforts. The clan mourns.
+<</if>>
+
+[[Continue->1618 End]]
+
+::Trail Scene
+<<set _roll = (call: "factionRoll", "Tracking", 15)>>
+You read the signs where the Telmori passed—blood, tracks, broken branches.
+
+<<if _roll.result is "great">>
+You learn where they're hiding. You can bring war.
+<<call "updateFaction", "freeSartar", 2>>
+<<call "advanceArc", "asvith", 1>>
+<<elseif _roll.result is "success">>
+The trail leads east—but fades at Staland.
+<<call "updateFaction", "freeSartar", 1>>
+<<else>>
+The signs confuse you. The Telmori moved cleverly.
+<</if>>
+
+[[Continue->1618 End]]
+
+::1618 End
+<<set $year = 1619>>
+<<set $season = "Sea Season">>
+<<call "updateResources", "wealth", -1>>
+<<call "updateResources", "warriors", -1>>
+The year ends. The Missing is over—the children are rescued, or lost to the werewolves. The Red Cow survives—but the Telmori have tasted blood again.
+
+<<if $clanResources.wealth <= 5>>
+Despite your efforts, the clan's wealth has diminished. The winter will be hard.
+<</if>>
+
+The war is coming. You can feel it in the wind.
+
+[[Book Two]->Season Transition]
+
+::Season Transition
+<<remember $year>>
+<<remember $season>>
+<<set _ending = (call: "checkEnding")>>
+
+You have completed Year $year.
+
+<<if $endingType == "freedom">>
+The flame of rebellion burns bright. Your actions have shaped the clan's path toward liberation.
+<<elseif $endingType == "collaboration">>
+The Lunar Way spreads through the clan. Survival comes at a cost.
+<<elseif $endingType == "exile">>
+The clan crumbles. Only scattered survivors remain to carry on.
+<<else>>
+Your path remains unwritten. The future hangs in balance.
+<</if>>
+
+<<if $year >= 1625>>
+Your current status:
+- Free Sartar: $factionStanding.freeSartar
+- Wolfskinners: $factionStanding.wolfskinners
+- Moon Winds: $factionStanding.moonWinds
+- Wealth: $clanResources.wealth
+
+Ending: $endingType
+<<else>>
+What memories will carry you into $year+1?
+<</if>>
+
+[[End Demo]]
+
+::Ending Check
+<<set _ending = (call: "checkEnding")>>
+
+<<if _ending == "freedom">>
+<<set $gameLog += (array: "The Red Cow clan has won freedom!")>>
+<<elseif _ending == "collaboration">>
+<<set $gameLog += (array: "The clan survives under Lunar rule.")>>
+<<elseif _ending == "exile">>
+<<set $gameLog += (array: "The clan has fallen. Exile awaits.")>>
+<<else>>
+<<set $gameLog += (array: "The future remains unwritten.")>>
+<</if>>
